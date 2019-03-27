@@ -1,4 +1,3 @@
-use fid::{BitVector, FID};
 use std::fmt;
 
 use fid::{BitVector, FID};
@@ -110,7 +109,7 @@ mod tests {
     }
 
     #[test]
-    fn numbers() {
+    fn rank_small() {
         let numbers = &[4u8, 7, 6, 5, 3, 2, 1, 0, 1, 4, 1, 7];
         let size = 3;
         let wm = WaveletMatrix::new_with_size(numbers, size);
@@ -123,6 +122,17 @@ mod tests {
                     r = r + 1;
                 }
             }
+        }
+    }
+
+    #[test]
+    fn access_small() {
+        let numbers = &[4u8, 7, 6, 5, 3, 2, 1, 0, 1, 4, 1, 7];
+        let size = 3;
+        let wm = WaveletMatrix::new_with_size(numbers, size);
+        assert_eq!(wm.len, numbers.len());
+        for (i, &n) in numbers.iter().enumerate() {
+            assert!(wm.access::<u8>(i) == n, "wm.access({}) == {}", i, n);
         }
     }
 
