@@ -75,9 +75,9 @@ impl WaveletMatrix {
             s = bv.rank(b, s);
             e = bv.rank(b, e);
             if b {
-                let l = bv.rank0(bv.len());
-                s = s + l;
-                e = e + l;
+                let z = bv.rank0(bv.len());
+                s = s + z;
+                e = e + z;
             }
         }
         (e - s) as usize
