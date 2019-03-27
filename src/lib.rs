@@ -82,6 +82,30 @@ impl WaveletMatrix {
         }
         (e - s) as usize
     }
+
+    pub fn select<T: Into<usize> + Copy + Clone>(self: &Self, c: T, k: usize) -> usize {
+        let n = c.into();
+        let mut s = 0u64;
+        for (r, bv) in self.rows.iter().enumerate() {
+            let b = (n >> (self.size - r - 1)) & 1 > 0;
+            s = bv.rank(b, s);
+            if b {
+                let z = bv.rank0(bv.len());
+                s = s + z;
+            }
+        }
+        let mut e = s + (k as u64);
+        for (r, bv) in self.rows.iter().enumerate().rev() {
+            let b = (n >> (self.size - r - 1)) & 1 > 0;
+            if b {
+                let z = bv.rank0(bv.len());
+                e = bv.select1(e - z);
+            } else {
+                e = bv.select0(e);
+            }
+        }
+        e as usize
+    }
 }
 
 impl fmt::Debug for WaveletMatrix {
@@ -133,6 +157,24 @@ mod tests {
         assert_eq!(wm.len, numbers.len());
         for (i, &n) in numbers.iter().enumerate() {
             assert!(wm.access::<u8>(i) == n, "wm.access({}) == {}", i, n);
+        }
+    }
+
+    #[test]
+    fn select_small() {
+        let numbers = &[4u8, 7, 6, 5, 3, 2, 1, 0, 1, 4, 1, 7];
+        let size = 3;
+        let wm = WaveletMatrix::new_with_size(numbers, size);
+
+        let mut ans: Vec<Vec<usize>> = vec![vec![]; 1 << size];
+        for (i, &n) in numbers.iter().enumerate() {
+            ans[n as usize].push(i);
+        }
+
+        for (c, a) in ans.iter().enumerate() {
+            for (k, &i) in a.iter().enumerate() {
+                assert!(wm.select(c, k) == i, "wm.select({}, {}) == {}", c, k, i);
+            }
         }
     }
 
