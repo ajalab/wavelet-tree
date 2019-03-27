@@ -1,6 +1,9 @@
 use fid::{BitVector, FID};
 use std::fmt;
 
+use fid::{BitVector, FID};
+use try_from::TryFrom;
+
 pub struct WaveletMatrix {
     rows: Vec<BitVector>,
     size: usize,
@@ -44,6 +47,24 @@ impl WaveletMatrix {
 
     pub fn new<T: Into<usize> + Copy + Clone, K: AsRef<[T]>>(text: K) -> Self {
         Self::new_with_size(text, std::mem::size_of::<T>() * 8)
+    }
+
+    pub fn access<T: TryFrom<usize> + Copy + Clone>(self: &Self, k: usize) -> T
+    where
+        <T as try_from::TryFrom<usize>>::Err: std::fmt::Debug,
+    {
+        let mut i = k as u64;
+        let mut n = 0usize;
+        for (r, bv) in self.rows.iter().enumerate() {
+            let b = bv.get(i);
+            if b {
+                i = bv.rank0(self.len as u64) + bv.rank1(i);
+                n |= 1 << (self.size - r - 1);
+            } else {
+                i = bv.rank0(i);
+            }
+        }
+        TryFrom::try_from(n).unwrap()
     }
 
     pub fn rank<T: Into<usize> + Copy + Clone>(self: &Self, c: T, k: usize) -> usize {
