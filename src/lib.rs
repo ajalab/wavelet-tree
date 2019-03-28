@@ -127,12 +127,6 @@ impl fmt::Debug for WaveletMatrix {
 mod tests {
     use super::*;
     #[test]
-    fn it_works() {
-        let wm = WaveletMatrix::new("abc");
-        wm.rank(b'a', 3);
-    }
-
-    #[test]
     fn rank_small() {
         let numbers = &[4u8, 7, 6, 5, 3, 2, 1, 0, 1, 4, 1, 7];
         let size = 3;
