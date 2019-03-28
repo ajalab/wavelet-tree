@@ -7,6 +7,7 @@ pub struct WaveletMatrix {
     rows: Vec<BitVector>,
     size: usize,
     len: usize,
+    partitions: Vec<usize>,
 }
 
 impl WaveletMatrix {
@@ -17,6 +18,7 @@ impl WaveletMatrix {
         let mut rows: Vec<BitVector> = vec![];
         let mut zeros: Vec<T> = text.as_ref().to_vec();
         let mut ones: Vec<T> = Vec::new();
+        let mut partitions: Vec<usize> = Vec::new();
         for r in 0..size {
             let mut bv = BitVector::new();
             let mut new_zeros: Vec<T> = Vec::new();
@@ -36,11 +38,13 @@ impl WaveletMatrix {
             zeros = new_zeros;
             ones = new_ones;
             rows.push(bv);
+            partitions.push(zeros.len());
         }
         WaveletMatrix {
             rows: rows,
             size: size,
             len: text.as_ref().len(),
+            partitions: partitions,
         }
     }
 
@@ -57,7 +61,7 @@ impl WaveletMatrix {
         for (r, bv) in self.rows.iter().enumerate() {
             let b = bv.get(i);
             if b {
-                i = bv.rank0(self.len as u64) + bv.rank1(i);
+                i = self.partitions[r] as u64 + bv.rank1(i);
                 n |= 1 << (self.size - r - 1);
             } else {
                 i = bv.rank0(i);
@@ -75,7 +79,7 @@ impl WaveletMatrix {
             s = bv.rank(b, s);
             e = bv.rank(b, e);
             if b {
-                let z = bv.rank0(bv.len());
+                let z = self.partitions[r] as u64;
                 s = s + z;
                 e = e + z;
             }
@@ -90,7 +94,7 @@ impl WaveletMatrix {
             let b = (n >> (self.size - r - 1)) & 1 > 0;
             s = bv.rank(b, s);
             if b {
-                let z = bv.rank0(bv.len());
+                let z = self.partitions[r] as u64;
                 s = s + z;
             }
         }
@@ -98,7 +102,7 @@ impl WaveletMatrix {
         for (r, bv) in self.rows.iter().enumerate().rev() {
             let b = (n >> (self.size - r - 1)) & 1 > 0;
             if b {
-                let z = bv.rank0(bv.len());
+                let z = self.partitions[r] as u64;
                 e = bv.select1(e - z);
             } else {
                 e = bv.select0(e);
