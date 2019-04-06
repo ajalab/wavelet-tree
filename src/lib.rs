@@ -110,6 +110,10 @@ impl WaveletMatrix {
         }
         e as usize
     }
+
+    pub fn len(self) -> usize {
+        self.len
+    }
 }
 
 impl fmt::Debug for WaveletMatrix {
