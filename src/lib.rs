@@ -52,7 +52,7 @@ impl WaveletMatrix {
         Self::new_with_size(text, std::mem::size_of::<T>() * 8)
     }
 
-    pub fn access<T: TryFrom<usize> + Copy + Clone>(self: &Self, k: usize) -> T
+    pub fn access<T: TryFrom<usize> + Copy + Clone>(&self, k: usize) -> T
     where
         <T as try_from::TryFrom<usize>>::Err: std::fmt::Debug,
     {
@@ -70,7 +70,7 @@ impl WaveletMatrix {
         TryFrom::try_from(n).unwrap()
     }
 
-    pub fn rank<T: Into<usize> + Copy + Clone>(self: &Self, c: T, k: usize) -> usize {
+    pub fn rank<T: Into<usize> + Copy + Clone>(&self, c: T, k: usize) -> usize {
         let n = c.into();
         let mut s = 0u64;
         let mut e = if k < self.len { k } else { self.len } as u64;
@@ -87,7 +87,7 @@ impl WaveletMatrix {
         (e - s) as usize
     }
 
-    pub fn select<T: Into<usize> + Copy + Clone>(self: &Self, c: T, k: usize) -> usize {
+    pub fn select<T: Into<usize> + Copy + Clone>(&self, c: T, k: usize) -> usize {
         let n = c.into();
         let mut s = 0u64;
         for (r, bv) in self.rows.iter().enumerate() {
@@ -111,7 +111,7 @@ impl WaveletMatrix {
         e as usize
     }
 
-    pub fn len(self) -> usize {
+    pub fn len(&self) -> usize {
         self.len
     }
 }
