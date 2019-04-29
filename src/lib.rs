@@ -6,15 +6,12 @@ use try_from::TryFrom;
 pub struct WaveletMatrix {
     rows: Vec<BitVector>,
     size: usize,
-    len: usize,
+    len: u64,
     partitions: Vec<usize>,
 }
 
 impl WaveletMatrix {
-    pub fn new_with_size<T: Into<usize> + Copy + Clone, K: AsRef<[T]>>(
-        text: K,
-        size: usize,
-    ) -> Self {
+    pub fn new_with_size<T: Into<u64> + Copy + Clone, K: AsRef<[T]>>(text: K, size: usize) -> Self {
         let mut rows: Vec<BitVector> = vec![];
         let mut zeros: Vec<T> = text.as_ref().to_vec();
         let mut ones: Vec<T> = Vec::new();
@@ -43,12 +40,12 @@ impl WaveletMatrix {
         WaveletMatrix {
             rows: rows,
             size: size,
-            len: text.as_ref().len(),
+            len: text.as_ref().len() as u64,
             partitions: partitions,
         }
     }
 
-    pub fn new<T: Into<usize> + Copy + Clone, K: AsRef<[T]>>(text: K) -> Self {
+    pub fn new<T: Into<u64> + Copy + Clone, K: AsRef<[T]>>(text: K) -> Self {
         Self::new_with_size(text, std::mem::size_of::<T>() * 8)
     }
 
@@ -70,10 +67,10 @@ impl WaveletMatrix {
         TryFrom::try_from(n).unwrap()
     }
 
-    pub fn rank<T: Into<usize> + Copy + Clone>(&self, c: T, k: usize) -> usize {
+    pub fn rank<T: Into<u64> + Copy + Clone>(&self, c: T, k: u64) -> usize {
         let n = c.into();
         let mut s = 0u64;
-        let mut e = if k < self.len { k } else { self.len } as u64;
+        let mut e = if k < self.len { k } else { self.len };
         for (r, bv) in self.rows.iter().enumerate() {
             let b = (n >> (self.size - r - 1)) & 1 > 0;
             s = bv.rank(b, s);
@@ -111,7 +108,7 @@ impl WaveletMatrix {
         e as usize
     }
 
-    pub fn len(&self) -> usize {
+    pub fn len(&self) -> u64 {
         self.len
     }
 }
@@ -139,11 +136,17 @@ mod tests {
         let numbers = &[4u8, 7, 6, 5, 3, 2, 1, 0, 1, 4, 1, 7];
         let size = 3;
         let wm = WaveletMatrix::new_with_size(numbers, size);
-        assert_eq!(wm.len, numbers.len());
+        assert_eq!(wm.len, numbers.len() as u64);
         for i in 0..(1 << size) {
             let mut r = 0;
             for (k, &n) in numbers.iter().enumerate() {
-                assert!(wm.rank(i as u8, k) == r, "wm.rank({}, {}) == {}", i, k, r);
+                assert!(
+                    wm.rank(i as u8, k as u64) == r,
+                    "wm.rank({}, {}) == {}",
+                    i,
+                    k,
+                    r
+                );
                 if n == i {
                     r = r + 1;
                 }
@@ -156,7 +159,7 @@ mod tests {
         let numbers = &[4u8, 7, 6, 5, 3, 2, 1, 0, 1, 4, 1, 7];
         let size = 3;
         let wm = WaveletMatrix::new_with_size(numbers, size);
-        assert_eq!(wm.len, numbers.len());
+        assert_eq!(wm.len, numbers.len() as u64);
         for (i, &n) in numbers.iter().enumerate() {
             assert!(wm.access::<u8>(i) == n, "wm.access({}) == {}", i, n);
         }
